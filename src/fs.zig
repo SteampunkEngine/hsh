@@ -318,9 +318,12 @@ pub fn findPath(
     return Error.Missing;
 }
 
-pub fn openFileStdout(name: []const u8, append: bool) !std.fs.File {
+pub fn openFileStdout(name: []const u8, append: bool, a: Allocator) !std.fs.File {
+    // canonicalize path
+    []const u8 canon_path = try std.fs.realpath(a, name);
+    defer a.free(canon_path);
     if (append) {
-        var file = openFile(name, true) orelse unreachable;
+        var file = openFile(canon_path, true) orelse unreachable;
         file.seekFromEnd(0) catch unreachable;
         return file;
     }
@@ -328,7 +331,8 @@ pub fn openFileStdout(name: []const u8, append: bool) !std.fs.File {
     // TODO don't use string here
     if (vars.getKind("noclobber", .internal)) |noclobber| {
         if (std.mem.eql(u8, noclobber.str, "true")) {
-            if (std.fs.cwd().openFile(name, .{ .mode = .read_only })) |file| {
+
+            if (std.fs.openFileAbsolute(canon_path, .{ .mode = .read_only })) |file| {
                 file.close();
                 return Error.NoClobber;
             } else |err| {

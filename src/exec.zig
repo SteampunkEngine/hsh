@@ -264,7 +264,7 @@ fn mkCallableStack(a: Allocator, itr: *TokenIterator) Error![]CallableStack {
             if (maybeio.kind == .io) {
                 switch (maybeio.kind.io) {
                     .Out, .Append => |appnd| {
-                        const f = fs.openFileStdout(maybeio.cannon(), appnd == .Append) catch |err| {
+                        const f = fs.openFileStdout(maybeio.cannon(), appnd == .Append, a) catch |err| {
                             switch (err) {
                                 fs.Error.NoClobber => log.err("Noclobber is enabled.\n", .{}),
                                 else => log.err("Failed to open file {s}\n", .{maybeio.cannon()}),
